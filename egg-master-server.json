@@ -1,0 +1,101 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2026-01-19T15:10:00+01:00",
+    "name": "GoldSrc Master Server",
+    "author": "goranevol@gmail.com",
+    "description": "High-performance GoldSrc Master Server for CS 1.6.\r\nServes server lists to game clients with API and local server support.",
+    "features": null,
+    "docker_images": {
+        "ghcr.io/pterodactyl/yolks:nodejs_20": "ghcr.io/pterodactyl/yolks:nodejs_20"
+    },
+    "file_denylist": [],
+    "startup": "node dist/server.js",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Master Server is running\",\r\n    \"userInteraction\": []\r\n}",
+        "stop": "^^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\n# GoldSrc Master Server Installation Script\n\nset -e\n\necho \"[INSTALL] Starting GoldSrc Master Server installation...\"\n\n# Install dependencies\napt-get update -y\napt-get install -y --no-install-recommends curl wget git ca-certificates\n\n# Setup server directory\ncd /mnt/server || exit 1\n\n# Clone or download the server files\nif [ -n \"$GIT_REPO\" ] && [ \"$GIT_REPO\" != \"\" ]; then\n    echo \"[INSTALL] Cloning from git repository...\"\n    git clone \"$GIT_REPO\" .\nelse\n    echo \"[INSTALL] Using existing files or manual upload...\"\nfi\n\n# Install Node.js dependencies\nif [ -f \"package.json\" ]; then\n    echo \"[INSTALL] Installing npm dependencies...\"\n    npm install --production=false\n    \n    echo \"[INSTALL] Building TypeScript...\"\n    npm run build\n    \n    echo \"[INSTALL] Cleaning dev dependencies...\"\n    npm prune --production\nfi\n\n# Create default config files if not exist\nif [ ! -f \".env\" ]; then\n    echo \"[INSTALL] Creating default .env file...\"\n    cat > .env << 'EOF'\n# GoldSrc Master Server Configuration\nNODE_ENV=production\nUDP_PORT={{SERVER_PORT}}\nUDP_HOST=0.0.0.0\n\n# API Configuration\nAPI_URL={{API_URL}}\nAPI_UPDATE_INTERVAL={{API_UPDATE_INTERVAL}}\n\n# Connection Logging\nENABLE_CONNECTION_LOGGING={{ENABLE_LOGGING}}\nCONNECTIONS_API_URL={{CONNECTIONS_API_URL}}\nLOG_FILE=connections.log\n\n# Local Server List\nLOCAL_SERVERS_FILE=local-servers.json\nLOCAL_SERVERS_PRIORITY={{LOCAL_PRIORITY}}\n\n# Rate Limiting\nMAX_CONNECTIONS_PER_IP={{MAX_CONN_PER_IP}}\nRATE_LIMIT_WINDOW_MS=60000\n\n# Performance\nMAX_TRACKED_CONNECTIONS=100000\nCONNECTION_TTL_MS=86400000\nEOF\nfi\n\nif [ ! -f \"local-servers.json\" ]; then\n    echo \"[INSTALL] Creating default local-servers.json...\"\n    cat > local-servers.json << 'EOF'\n{\n  \"enabled\": false,\n  \"servers\": []\n}\nEOF\nfi\n\nchmod 750 /mnt/server/\necho \"[INSTALL] Installation complete\"",
+            "container": "ghcr.io/pterodactyl/yolks:nodejs_20",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "API URL",
+            "description": "URL to fetch the server list from (JSON API endpoint)",
+            "env_variable": "API_URL",
+            "default_value": "http://gsboost.com/masterserver/test/api/servers.php",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:500",
+            "field_type": "text"
+        },
+        {
+            "name": "API Update Interval",
+            "description": "How often to refresh the server list from API (in milliseconds). Default: 1200000 (20 minutes)",
+            "env_variable": "API_UPDATE_INTERVAL",
+            "default_value": "1200000",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:60000",
+            "field_type": "text"
+        },
+        {
+            "name": "Enable Connection Logging",
+            "description": "Enable logging of client connections (true/false)",
+            "env_variable": "ENABLE_LOGGING",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:true,false",
+            "field_type": "text"
+        },
+        {
+            "name": "Connections API URL",
+            "description": "Optional API endpoint to send connection logs to",
+            "env_variable": "CONNECTIONS_API_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:500",
+            "field_type": "text"
+        },
+        {
+            "name": "Local Server Priority",
+            "description": "Priority for local servers: high (local first), low (API first), only (local only)",
+            "env_variable": "LOCAL_PRIORITY",
+            "default_value": "high",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|in:high,low,only",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Connections Per IP",
+            "description": "Maximum requests per IP per minute (rate limiting)",
+            "env_variable": "MAX_CONN_PER_IP",
+            "default_value": "100",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|integer|min:10|max:10000",
+            "field_type": "text"
+        },
+        {
+            "name": "Git Repository",
+            "description": "Optional: Git repository URL to clone server files from",
+            "env_variable": "GIT_REPO",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string|max:500",
+            "field_type": "text"
+        }
+    ]
+}

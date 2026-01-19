@@ -1,0 +1,10 @@
+{
+    "enabled": true,
+    "servers": [
+        {
+            "address": "127.0.0.1:27015",
+            "name": "Local Test Server",
+            "priority": 1
+        }
+    ]
+}
